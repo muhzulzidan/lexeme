@@ -81,8 +81,6 @@ function Editor({editorState, onCreateChat, onChange, dtitle, history, onChatUpd
   const [title, setTitle] = useState<string>(dtitle)
   const [floatingAnchorElem, setFloatingAnchorElem] =useState<HTMLDivElement | null>(null);
 
-  // console.log("REINITIALIZED", editorConfig)
-
   const onRef = (_floatingAnchorElem: HTMLDivElement) => {
       if (_floatingAnchorElem !== null) {
         setFloatingAnchorElem(_floatingAnchorElem);
@@ -253,18 +251,13 @@ export default function App(){
 
   const onChange = (editorState: EditorState) => {
       if(currentDoc){
-        // localStorage.setItem("doc-"+currentDoc.id, JSON.stringify({...currentDoc, data: JSON.stringify(editorState.toJSON())}))
-        // console.log("saved", "doc-"+currentDoc.id)
         const _editorState = JSON.stringify(editorState.toJSON())
-        // const title = editorState.toJSON().root.children.filter(e => e.tag == "h1")[0]?.children[0]?.text
         setEditorState(_editorState)
         saveDoc(_editorState, history)
         console.log("Saving changes...", history)
       }
   }
-  // const docToJson = (doc: Doc) => {
-  //   return {id: doc.id, title: doc.title, data: doc.data, history: doc.history}
-  // }
+
   const onCreateDoc = () => {
     const doc: Doc = {id: nanoid(), title: "Untitled", prompt: "", data: defaultData, history: [], createdAt: +new Date, updatedAt: +new Date}
     const _docs: DocIndex[] = [{id: "doc-"+doc.id, title: doc.title} as DocIndex, ...docs]
@@ -277,20 +270,6 @@ export default function App(){
     setHistory(doc.history)
     console.log("created", doc.id)
   }
-
-
-  // useEffect(() => {
-  //   localStorage.setItem("docs", JSON.stringify(docs))
-  //   console.log("saving docs..")
-  // }, [docs]);
-
-
-
-
-  // useEffect(() => {
-  //   if(currentDoc){
-  //   }
-  // }, [history]);
 
 
   const onSelectDoc = (docId: string) => {
