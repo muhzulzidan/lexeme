@@ -84,7 +84,7 @@ function Conversation ({item, index, onChatUpdate, addText, setting}){
   
       // const prompt = question
       const controller = new AbortController();
-      const response = await fetch("/lexeme/api/writer2", {
+      const response = await fetch("/api/writer2", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

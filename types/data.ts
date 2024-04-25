@@ -1,9 +1,9 @@
 export type TaskType = 'improve' | 'expand' | 'shorten' | 'continue';
 export type TaskTone = 'causal' | 'semicasual' | 'professional' | 'concise' | 'charismatic';
-import { IconType } from "react-icons";
+// import { IconType } from "react-icons";
 import { FiArrowRight, FiMinus, FiPlus, FiZap, FiFeather, FiCloud, FiShuffle, FiMessageSquare, FiGrid } from "react-icons/fi"
 
-type Role = "assistant" | "user";
+export type Role = "assistant" | "user";
 export interface Message {
   role: Role;
   content: string;
@@ -114,7 +114,9 @@ export const DefaultSetting: Setting = {
   temperature: 0.5,
   apiKey: '',
   globalPrompt: 'You are an assistant helping a user write a document. Follow the user\'s instructions carefully. Respond using markdown.',
-  actionPrompts: DefaultActions
+  actionPrompts: DefaultActions,
+  createdAt: 0,
+  updatedAt: 0
 }
 
 // export const TasksMap = new Map(

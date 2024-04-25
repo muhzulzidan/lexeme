@@ -1,13 +1,14 @@
 import { Action, ActionIconMap, DefaultActions } from "@/types/data";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import {FiArrowRight, FiCloud, FiFeather, FiFile, FiFileText, FiGlobe, FiGrid, FiHash, FiMinus, FiPlus, FiShuffle, FiType, FiZap} from "react-icons/fi"
+import { Trash3Fill } from "react-bootstrap-icons";
+import { FiArrowRight, FiCloud, FiFeather, FiFile, FiFileText, FiGlobe, FiGrid, FiHash, FiMinus, FiPlus, FiShuffle, FiType, FiZap } from "react-icons/fi"
 import Markdown from 'react-markdown'
 export default function Home() {
 
   const useCases = [
     {
-      role: "Data Scientist", 
+      role: "Data Scientist",
       global: `
 You are an assistant helping a user write a document. Follow the user's instructions carefully. Respond using markdown.
 
@@ -78,18 +79,18 @@ Keep descriptions short and concise to 2-3 sentences. Emphasize the impact of th
 -   Q4 2023: Conduct A/B testing to optimize ad placement and design.
 -   Q4 2023: Deploy real-time product updates for dynamic product ads.
 `
-    },{
-      name: "Slack messages",
-      document: "You're writing a Slack message. Use a friendly semi-formal tone and don't be overly formal. Be a little witty and concise. Try to keep messages to 2-3 sentences.",
-      action: "expand",
-      context: "Our airflow instance is down, expect delayed business reports",
-      output: "Hey Xers! Just a heads up, our airflow instance is currently down so we might experience some delays with our business reports. Hang tight, we're working on getting it back up and running ASAP! 💪"
-    },{
-      name: "Announcements",
-      document: "**Use emphatetic tone**. Use corporate professional language.",
-      action: "expand",
-      context: "Our airflow instance is down, expect delayed business reports",
-      output: `
+      }, {
+        name: "Slack messages",
+        document: "You're writing a Slack message. Use a friendly semi-formal tone and don't be overly formal. Be a little witty and concise. Try to keep messages to 2-3 sentences.",
+        action: "expand",
+        context: "Our airflow instance is down, expect delayed business reports",
+        output: "Hey Xers! Just a heads up, our airflow instance is currently down so we might experience some delays with our business reports. Hang tight, we're working on getting it back up and running ASAP! 💪"
+      }, {
+        name: "Announcements",
+        document: "**Use emphatetic tone**. Use corporate professional language.",
+        action: "expand",
+        context: "Our airflow instance is down, expect delayed business reports",
+        output: `
 Dear Xers,
 
 I hope this message finds you well. I wanted to inform you that our airflow instance, which is crucial for generating our business reports, is currently experiencing technical difficulties and is temporarily down. As a result, there may be a delay in receiving the reports that we rely on for critical business insights.
@@ -109,14 +110,14 @@ Best regards,
 [Your Name]  
 Data Scientist, Growth Team
 `
-    },{
-      name: "Project Herculean",
-      document: "Project Herculean is an initiative to migrate all our Kubernetes clusters from AWS to GCP. Person In Charge for this project as below:\n\n- Product Manager: James Anderson\n\n- Platform Engineering: Thomas Jefferson",
-      action: "expand",
-      context: "For details regarding the timelines, talk to the PM",
-      output: "If you need more information about the specific timelines for Project Herculean, I recommend reaching out to the Product Manager, James Anderson. He will be able to provide you with the necessary details and answer any questions you may have. It is important to stay informed about the project's progress and deadlines to ensure its successful execution. Feel free to reach out to James for any further clarification or updates."
+      }, {
+        name: "Project Herculean",
+        document: "Project Herculean is an initiative to migrate all our Kubernetes clusters from AWS to GCP. Person In Charge for this project as below:\n\n- Product Manager: James Anderson\n\n- Platform Engineering: Thomas Jefferson",
+        action: "expand",
+        context: "For details regarding the timelines, talk to the PM",
+        output: "If you need more information about the specific timelines for Project Herculean, I recommend reaching out to the Product Manager, James Anderson. He will be able to provide you with the necessary details and answer any questions you may have. It is important to stay informed about the project's progress and deadlines to ensure its successful execution. Feel free to reach out to James for any further clarification or updates."
+      }]
     }]
-  }]
 
   const [ucIndex, setucIndex] = useState(0)
 
@@ -134,33 +135,33 @@ Data Scientist, Growth Team
   // }, [])
 
   const renderIcon = (task_id) => {
-    let task : Action;
+    let task: Action;
     for (let i = 0; i < DefaultActions.length; i++) {
       const t = DefaultActions[i];
-      if(t.id == task_id){
+      if (t.id == task_id) {
         task = t
         break
       }
     }
-    
+
     let icon = task.id
-    if(!ActionIconMap.hasOwnProperty(task.id)){
+    if (!ActionIconMap.hasOwnProperty(task.id)) {
       icon = 'custom'
     }
     const Icon = ActionIconMap[icon];
     return (<div>
       <div className="inline-flex items-center px-4 py-2 bg-gray-200 text-gray-800 rounded-lg mr-8 ">
-      <Icon width="1.125em" height="1.125em" className="mr-2 text-gray-800" />{task.name}</div>
+        <Icon width="1.125em" height="1.125em" className="mr-2 text-gray-800" />{task.name}</div>
       <div className="mt-4">{task.prompt}</div>
-      </div>);
+    </div>);
   };
 
-  function tabClass(current, active){
+  function tabClass(current, active) {
     let c = 'mr-4 mb-4 px-8 py-4 cursor-pointer items-center rounded-lg '
-    if(current == active){
-        c += ' bg-sky-100 text-blue-800 font-semibold'
-    }else{
-        c += ' bg-gray-50 hover:bg-gray-200 text-gray-600 '
+    if (current == active) {
+      c += ' bg-sky-100 text-blue-800 font-semibold'
+    } else {
+      c += ' bg-gray-50 hover:bg-gray-200 text-gray-600 '
     }
     return c
   }
@@ -168,7 +169,7 @@ Data Scientist, Growth Team
   const [output, setOutput] = useState("");
 
   let interval;
-  function handleTabClick(uc){
+  function handleTabClick(uc) {
     // clearInterval(interval);
     setucIndex(uc)
     // const words = useCases[0].documents[uc].output?.split(" ")
@@ -197,7 +198,7 @@ Data Scientist, Growth Team
     let currentIndex = 0;
     setOutput(words[currentIndex])
     interval = setInterval(() => {
-      if (currentIndex < words.length -1) {
+      if (currentIndex < words.length - 1) {
         setOutput(prevOutput => prevOutput + " " + words[currentIndex]);
         currentIndex++;
       } else {
@@ -211,52 +212,90 @@ Data Scientist, Growth Team
   }, [ucIndex]);
 
   return (<>
-  <header className="animate-header-slide-down-fade sticky top-0 border-b border-transparent backdrop-blur-sm transition duration-200 ease-in-out z-10">
-  <div className="mx-auto w-full max-w-5xl px-6 md:max-w-7xl">
-    <div className="mx-auto hidden h-[58px] w-full items-center justify-between transition duration-500 ease-in-out md:flex">
-      <div className="flex lg:w-[225px]">
-        <Link className="focus-visible:ring-slate-7 py-1 outline-none transition duration-150 ease-in-out focus-visible:ring-2 text-2xl font-semibold" aria-label="Resend" href="/">Lexeme</Link>
-      </div>
-      <div className="flex gap-4">
-        <Link className="inline-flex h-10 select-none items-center justify-center gap-0 rounded-lg border border-gray-800 hover:border-sky-900 hover:bg-sky-900 bg-gray-900 text-white px-4 text-sm font-semibold outline-none transition transition duration-150 duration-200 ease-in-out ease-in-out" href="/editor">Try Lexeme</Link>
-        <Link className="inline-flex h-10 select-none items-center justify-center gap-0 rounded-lg border border-gray-300 hover:border-gray-200 hover:bg-gray-200 bg-white px-4 text-sm font-semibold outline-none transition transition duration-150 duration-200 ease-in-out ease-in-out" href="https://github.com/pagebrain/lexeme" target="_blank">Github</Link>
-      </div>
-    </div>
-  </div>
-</header>
+    <header className="animate-header-slide-down-fade sticky top-0 border-b border-transparent backdrop-blur-sm transition duration-200 ease-in-out z-10">
+      <div className="mx-auto w-full max-w-5xl px-6 md:max-w-7xl">
+        <div className="mx-auto hidden h-[58px] w-full items-center justify-between transition duration-500 ease-in-out md:flex">
+          
+          
 
-<main
+
+          <div className="flex lg:w-[225px]">
+            <Link className="focus-visible:ring-slate-7 py-1 outline-none transition duration-150 ease-in-out focus-visible:ring-2 text-2xl font-semibold" aria-label="Resend" href="/">Lexeme</Link>
+          </div>
+          <div className="flex gap-4">
+            <Link className="inline-flex h-10 select-none items-center justify-center gap-0 rounded-lg border border-gray-800 hover:border-sky-900 hover:bg-sky-900 bg-gray-900 text-white px-4 text-sm font-semibold outline-none transition transition duration-150 duration-200 ease-in-out ease-in-out" href="/editor">Try Lexeme</Link>
+            <Link className="inline-flex h-10 select-none items-center justify-center gap-0 rounded-lg border border-gray-300 hover:border-gray-200 hover:bg-gray-200 bg-white px-4 text-sm font-semibold outline-none transition transition duration-150 duration-200 ease-in-out ease-in-out" href="https://github.com/pagebrain/lexeme" target="_blank">Github</Link>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main
       className={`mx-auto max-w-6xl`}>
 
-
+      <ol className="">
+        
+        <li 
+        className="flex  gap-3 items-center relative group rounded-md cursor-pointer break-all text-gray-900 hover:bg-gray-100"
+        >
+          <button 
+          className="w-full h-full px-4 py-4 flex justify-start " 
+          onClick={() => alert("anjay 3")}
+          >
+            anjay 1
+          </button>
+          <button
+            onClick={() => alert("button 3")}
+            className="h-full px-4 py-4 ml-auto rounded-lg hover:bg-indigo-400"
+            >
+            <Trash3Fill className="w-4 h-auto" />
+          </button>
+        </li>
+        
+        <li className="flex gap-3 items-center relative group rounded-md cursor-pointer break-all text-gray-900 hover:bg-gray-100 ">
+          <button 
+          className=" p-3 " 
+          onClick={() => alert("anjay 2")}
+          >
+            anjay 3
+          </button>
+          <button
+            onClick={() => alert("button 2")}
+            className="h-full px-4 py-4 ml-auto rounded-lg hover:bg-indigo-400">
+            <Trash3Fill className="w-4 h-auto" />
+          </button>
+        </li>
+       
+        
+      </ol>
 
       <div className="my-12 text-center">
         <h1 className='text-6xl font-semibold text-gray-900'>Open Source ChatGPT Text Editor</h1>
         {/* ChatGPT workbench for power users */}
         <h2 className='text-2xl mt-4 text-gray-600'>Inspired by SQL Workbench</h2>
         {/* <h2 className='text-4xl font-semibold mt-4 text-gray-600'>SQL workbench equivalent of ChatGPT</h2> */}
-        
+
         <p className="text-2xl text-gray-700 py-8">Experience a fully integrated workflow for brainstorming, writing and rewriting with ChatGPT as your copilot, all within the same window. No more switching back and forth between ChatGPT and Text Editors.</p>
-        
+
         <Link className="inline-block text-2xl justify-center mt-4 py-4 px-6 transition-colors border border-gray-800 hover:border-sky-900 hover:bg-sky-900 bg-gray-900 text-white rounded-lg mr-4" href="/editor">Try Lexeme</Link>
         <Link className="inline-block text-2xl justify-center mt-4 py-4 px-6 transition-colors border border-gray-300 hover:border-gray-200 hover:bg-gray-200 bg-white rounded-lg" href="https://github.com/pagebrain/lexeme" target="_blank">Github</Link>
-      
+
       </div>
       {/* <div className="my-24 text-center">
       Start separate chat threads
       </div> */}
-{/* 
+      {/* 
       <div className="relative mx-auto max-w-7xl mt-8 mb-16 px-8">
         <div className="text-center">
             <h2 className='text-4xl font-semibold text-gray-900 mb-4'>Select and Chat</h2>
             <p className="text-2xl text-gray-600 mb-8"></p>
         </div>
       </div> */}
-      
+
       <div className="relative mx-auto max-w-7xl mt-8 mb-16 px-8">
         <div className="text-center">
-            <h2 className='text-4xl font-semibold text-gray-900 mb-4'>Selective Context</h2>
-            <p className="text-2xl text-gray-600 mb-8">Lexeme enables power users to easily collaborate with ChatGPT without constantly copying and pasting. Only selected text will be sent to ChatGPT. This means you can rewrite that once sentence instead of the entire paragraph. Just highlight the text you want to edit and smoothly transition into a chat with ChatGPT.</p>
+          <h2 className='text-4xl font-semibold text-gray-900 mb-4'>Selective Context</h2>
+          <p className="text-2xl text-gray-600 mb-8">Lexeme enables power users to easily collaborate with ChatGPT without constantly copying and pasting. Only selected text will be sent to ChatGPT. This means you can rewrite that once sentence instead of the entire paragraph. Just highlight the text you want to edit and smoothly transition into a chat with ChatGPT.</p>
         </div>
         <div className="mx-auto max-w-5xl">
           <video className="rounded rounded-lg" src="https://static.pagebrain.ai/1080p-video1-24fps.mp4" autoPlay loop playsInline muted></video>
@@ -265,43 +304,43 @@ Data Scientist, Growth Team
 
       <div className="relative mx-auto max-w-7xl mt-8 mb-16 px-8">
         <div className="text-center">
-            <h2 className='text-4xl font-semibold text-gray-900 mb-4'>Reusable Prompts</h2>
-            <p className="text-2xl text-gray-600 mb-8">You can set your preferred style in the document prompt, and every subsequent chat will use the same prompt. This means you don&apos;t have to create a new chat and repeat yourself every time you want to draft similar but unrelated messages, emails, or announcements.</p>
+          <h2 className='text-4xl font-semibold text-gray-900 mb-4'>Reusable Prompts</h2>
+          <p className="text-2xl text-gray-600 mb-8">You can set your preferred style in the document prompt, and every subsequent chat will use the same prompt. This means you don&apos;t have to create a new chat and repeat yourself every time you want to draft similar but unrelated messages, emails, or announcements.</p>
         </div>
         <div className="mx-auto max-w-5xl">
-        <video className="rounded rounded-lg" src="https://static.pagebrain.ai/1080p-video2-24fps.mp4" autoPlay loop playsInline muted></video>
+          <video className="rounded rounded-lg" src="https://static.pagebrain.ai/1080p-video2-24fps.mp4" autoPlay loop playsInline muted></video>
         </div>
       </div>
       <div className="relative mx-auto max-w-7xl mt-8 mb-16 px-8">
         <div className="text-center">
           <h2 className='text-4xl font-semibold text-gray-900 mb-4'>Built-in action prompts</h2>
           <p className="text-2xl text-gray-600 mb-8">Quickly perform common tasks.</p>
-          </div>
+        </div>
         <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:gap-12 sm:gap-y-8 lg:grid-cols-4">
-            <div className="max-w-xs text-base font-medium leading-relaxed text-gray-900 sm:text-lg">
-              <FiZap size="1.2rem" className="-mt-1 mr-1.5 inline-block h-4 text-sky-700 sm:h-[20px]"/>Improve <span className="brake mt-1 block text-sm font-normal text-gray-700 sm:text-base">Without losing too much of your style.</span>
-            </div>
-            <div className="max-w-xs text-base font-medium leading-relaxed text-gray-900 sm:text-lg">
-            <FiPlus size="1.2rem" className="-mt-1 mr-1.5 inline-block h-4 text-sky-700 sm:h-[20px]"/>Expand <span className="brake mt-1 block text-sm font-normal text-gray-700 sm:text-base">Expand your sentences to give more detail, nuance and depth.</span>
-            </div>
-            <div className="max-w-xs text-base font-medium leading-relaxed text-gray-900 sm:text-lg">
-            <FiMinus size="1.2rem" className="-mt-1 mr-1.5 inline-block h-4 text-sky-700 sm:h-[20px]"/>Shorten it<span className="brake mt-1 block text-sm font-normal text-gray-700 sm:text-base">Stick to word limits and convey your messages clearly and concisely.</span>
-            </div>
-            <div className="max-w-xs text-base font-medium leading-relaxed text-gray-900 sm:text-lg">
-            <FiArrowRight size="1.2rem" className="-mt-1 mr-1.5 inline-block h-4 text-sky-700 sm:h-[20px]"/>Continue <span className="brake mt-1 block text-sm font-normal text-gray-700 sm:text-base">Only give access to some user roles in your app.</span>
-            </div>
-            <div className="max-w-xs text-base font-medium leading-relaxed text-gray-900 sm:text-lg">
-            <FiShuffle size="1.2rem" className="-mt-1 mr-1.5 inline-block h-4 text-sky-700 sm:h-[20px]"/>Counter argument <span className="brake mt-1 block text-sm font-normal text-gray-700 sm:text-base">Generate opposing viewpoints to your argument.</span>
-            </div>
-            <div className="max-w-xs text-base font-medium leading-relaxed text-gray-900 sm:text-lg">
-            <FiFeather size="1.2rem" className="-mt-1 mr-1.5 inline-block h-4 text-sky-700 sm:h-[20px]"/>Example <span className="brake mt-1 block text-sm font-normal text-gray-700 sm:text-base">Provide concrete examples to support your argument.</span>
-            </div>
-            <div className="max-w-xs text-base font-medium leading-relaxed text-gray-900 sm:text-lg">
-            <FiCloud size="1.2rem" className="-mt-1 mr-1.5 inline-block h-4 text-sky-700 sm:h-[20px]"/>Brainstorm <span className="brake mt-1 block text-sm font-normal text-gray-700 sm:text-base">Generate new ideas related to your topic.</span>
-            </div>
-            <div className="max-w-xs text-base font-medium leading-relaxed text-gray-900 sm:text-lg">
-            <FiGrid size="1.2rem" className="-mt-1 mr-1.5 inline-block h-4 text-sky-700 sm:h-[20px]"/>Custom Prompts <span className="brake mt-1 block text-sm font-normal text-gray-700 sm:text-base">Create your own prompts to guide your writing.</span>
-            </div>
+          <div className="max-w-xs text-base font-medium leading-relaxed text-gray-900 sm:text-lg">
+            <FiZap size="1.2rem" className="-mt-1 mr-1.5 inline-block h-4 text-sky-700 sm:h-[20px]" />Improve <span className="brake mt-1 block text-sm font-normal text-gray-700 sm:text-base">Without losing too much of your style.</span>
+          </div>
+          <div className="max-w-xs text-base font-medium leading-relaxed text-gray-900 sm:text-lg">
+            <FiPlus size="1.2rem" className="-mt-1 mr-1.5 inline-block h-4 text-sky-700 sm:h-[20px]" />Expand <span className="brake mt-1 block text-sm font-normal text-gray-700 sm:text-base">Expand your sentences to give more detail, nuance and depth.</span>
+          </div>
+          <div className="max-w-xs text-base font-medium leading-relaxed text-gray-900 sm:text-lg">
+            <FiMinus size="1.2rem" className="-mt-1 mr-1.5 inline-block h-4 text-sky-700 sm:h-[20px]" />Shorten it<span className="brake mt-1 block text-sm font-normal text-gray-700 sm:text-base">Stick to word limits and convey your messages clearly and concisely.</span>
+          </div>
+          <div className="max-w-xs text-base font-medium leading-relaxed text-gray-900 sm:text-lg">
+            <FiArrowRight size="1.2rem" className="-mt-1 mr-1.5 inline-block h-4 text-sky-700 sm:h-[20px]" />Continue <span className="brake mt-1 block text-sm font-normal text-gray-700 sm:text-base">Only give access to some user roles in your app.</span>
+          </div>
+          <div className="max-w-xs text-base font-medium leading-relaxed text-gray-900 sm:text-lg">
+            <FiShuffle size="1.2rem" className="-mt-1 mr-1.5 inline-block h-4 text-sky-700 sm:h-[20px]" />Counter argument <span className="brake mt-1 block text-sm font-normal text-gray-700 sm:text-base">Generate opposing viewpoints to your argument.</span>
+          </div>
+          <div className="max-w-xs text-base font-medium leading-relaxed text-gray-900 sm:text-lg">
+            <FiFeather size="1.2rem" className="-mt-1 mr-1.5 inline-block h-4 text-sky-700 sm:h-[20px]" />Example <span className="brake mt-1 block text-sm font-normal text-gray-700 sm:text-base">Provide concrete examples to support your argument.</span>
+          </div>
+          <div className="max-w-xs text-base font-medium leading-relaxed text-gray-900 sm:text-lg">
+            <FiCloud size="1.2rem" className="-mt-1 mr-1.5 inline-block h-4 text-sky-700 sm:h-[20px]" />Brainstorm <span className="brake mt-1 block text-sm font-normal text-gray-700 sm:text-base">Generate new ideas related to your topic.</span>
+          </div>
+          <div className="max-w-xs text-base font-medium leading-relaxed text-gray-900 sm:text-lg">
+            <FiGrid size="1.2rem" className="-mt-1 mr-1.5 inline-block h-4 text-sky-700 sm:h-[20px]" />Custom Prompts <span className="brake mt-1 block text-sm font-normal text-gray-700 sm:text-base">Create your own prompts to guide your writing.</span>
+          </div>
         </div>
       </div>
 
@@ -311,62 +350,52 @@ Data Scientist, Growth Team
           <p className="text-xl text-gray-600 mb-8">System prompts are the initial instructions that define the starting point for a new chat. They establish the personality of the ChatGPT, specify what the model should and shouldn&apos;t answer, and determine the format of the model&apos;s responses.</p>
           <p className="text-xl text-gray-600 mb-8">The quality and specificity of the system prompt greatly influence the relevance and accuracy of the model&apos;s response. It is therefore important to provide a clear and concise system prompt that effectively conveys the user&apos;s intended message or question.</p>
           <p className="text-xl text-gray-600 mb-8">In Lexeme, the system prompt for a new chat consists of a combination of prompts: global, document, and action prompts. The global prompt sets the context for all the documents in Lexeme. The document prompt provides specific details that apply to all chats started within that particular document. Lastly, the action prompts serve as the final layer of concise requirements to be sent to ChatGPT.</p>
-          </div>
-          </div>
+        </div>
+      </div>
       <div className="p-4">
-      <div className="text-center">
-        <h2 className='text-4xl font-semibold text-gray-900 mb-4'>Advanced use cases</h2>
-        
-      </div>
-
+        <div className="text-center">
+          <h2 className='text-4xl font-semibold text-gray-900 mb-4'>Advanced use cases</h2>
+        </div>
         <div className="md:flex">
-        <ul className="mb-4">
-          {useCases[0].documents.map((v, i) => (<li key={i} className={tabClass(i, ucIndex)} onClick={(e)=>handleTabClick(i)}>{v.name}</li>))}
-        </ul>
-
-        <div>
-        <div className="mb-4 bg-gray-100 p-4 rounded-lg text-lg mx-auto">
-
-          <div className="flex items-center font-semibold text-gray-800 px-1 mb-4">System prompt</div>
-
-          
-          <div className="bg-gray-50 p-4 rounded-lg text-gray-800 mb-4">
-            <div className="flex items-center font-semibold text-sky-900 px-1 mb-4">
-              <FiGlobe width="1.125em" height="1.125em" className='mr-2 hidden sm:inline-block '/> Global prompt</div>
-            <Markdown className="pl-8 markdown">{useCases[0].global}</Markdown>
-          </div>
-
-          <div className="bg-gray-50 p-4 rounded-lg text-gray-800 mb-4">
-            <div className="flex items-center font-semibold text-sky-700 px-1 mb-4">
-              <FiFile width="1.125em" height="1.125em" className='mr-2 hidden sm:inline-block'/> Document prompt
+          <ul className="mb-4">
+            {useCases[0].documents.map((v, i) => (<li key={i} className={tabClass(i, ucIndex)} onClick={(e) => handleTabClick(i)}>{v.name}</li>))}
+          </ul>
+          <div>
+            <div className="mb-4 bg-gray-100 p-4 rounded-lg text-lg mx-auto">
+              <div className="flex items-center font-semibold text-gray-800 px-1 mb-4">System prompt</div>
+              <div className="bg-gray-50 p-4 rounded-lg text-gray-800 mb-4">
+                <div className="flex items-center font-semibold text-sky-900 px-1 mb-4">
+                  <FiGlobe width="1.125em" height="1.125em" className='mr-2 hidden sm:inline-block ' /> Global prompt</div>
+                <Markdown className="pl-8 markdown">{useCases[0].global}</Markdown>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg text-gray-800 mb-4">
+                <div className="flex items-center font-semibold text-sky-700 px-1 mb-4">
+                  <FiFile width="1.125em" height="1.125em" className='mr-2 hidden sm:inline-block' /> Document prompt
+                </div>
+                <Markdown className="pl-8 markdown">{useCases[0].documents[ucIndex].document}</Markdown>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg text-gray-800">
+                <div className="flex items-center font-semibold text-sky-500  px-1 mb-4">
+                  <FiZap width="1.125em" height="1.125em" className='mr-2 hidden sm:inline-block' /> Action prompt
+                </div>
+                <div className="pl-8 text-gray-800">
+                  {renderIcon(useCases[0].documents[ucIndex].action)}
+                </div>
+              </div>
             </div>
-            <Markdown className="pl-8 markdown">{useCases[0].documents[ucIndex].document}</Markdown>
-          </div>
-        <div className="bg-gray-50 p-4 rounded-lg text-gray-800">
-          <div className="flex items-center font-semibold text-sky-500  px-1 mb-4">
-            <FiZap width="1.125em" height="1.125em" className='mr-2 hidden sm:inline-block'/> Action prompt
-          </div>
-          <div className="pl-8 text-gray-800">
-          {renderIcon(useCases[0].documents[ucIndex].action)}
+            <div className="mb-4 bg-sky-50 p-8 text-lg mx-auto rounded-lg">
+              <div className="flex items-center font-semibold text-sky-900 px-1 mb-4">
+                <FiType width="1.125em" height="1.125em" className='mr-2 hidden sm:inline-block' /> Selected Context</div>
+              <Markdown className="pl-8 markdown text-sky-900">{useCases[0].documents[ucIndex].context}</Markdown>
+            </div>
+            <div className="mb-4 bg-gray-50 p-8 text-lg mx-auto rounded-lg">
+              <div className="flex items-center font-semibold text-gray-900 px-1 mb-4">
+                <FiHash width="1.125em" height="1.125em" className='mr-2 hidden sm:inline-block' /> Output</div>
+              <Markdown className="markdown">{output}</Markdown>
+            </div>
           </div>
         </div>
-        </div>
-
-        <div className="mb-4 bg-sky-50 p-8 text-lg mx-auto rounded-lg">
-          <div className="flex items-center font-semibold text-sky-900 px-1 mb-4">
-              <FiType width="1.125em" height="1.125em" className='mr-2 hidden sm:inline-block'/> Selected Context</div>
-          <Markdown className="pl-8 markdown text-sky-900">{useCases[0].documents[ucIndex].context}</Markdown>
-        </div>
-
-        <div className="mb-4 bg-gray-50 p-8 text-lg mx-auto rounded-lg">
-        <div className="flex items-center font-semibold text-gray-900 px-1 mb-4">
-              <FiHash width="1.125em" height="1.125em" className='mr-2 hidden sm:inline-block'/> Output</div>
-        <Markdown className="markdown">{output}</Markdown>
-          </div>
       </div>
-      </div>
-      </div>
-
       <footer className="mb-40"></footer>
     </main>
   </>
