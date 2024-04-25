@@ -1,5 +1,5 @@
 import { Setting, DefaultSetting, DefaultActions, Action} from '@/types/data';
-import { getSettings } from '@/components/utils/settings';
+// import { getSettings } from '@/components/utils/settings';
 
 import { useEffect, useContext, useState } from 'react';
 import { FiFile, FiGlobe, FiZap } from 'react-icons/fi';
@@ -127,13 +127,13 @@ export default function Prompts({ setIsOpen, docPrompt, setDocPrompt, setting, s
 
         {tab == "doc" &&
         <div className="flex flex-col">
-            <textarea id="docPrompt" name="docPrompt" className='textarea' placeholder='Enter document prompt' rows="8" value={docPrompt} onChange={(e) => setDocPrompt(e.target.value)}></textarea>
+            <textarea id="docPrompt" name="docPrompt" className='textarea' placeholder='Enter document prompt' rows={8} value={docPrompt} onChange={(e) => setDocPrompt(e.target.value)}></textarea>
         </div>
         }
 
         {tab == "global" &&
         <div className="flex flex-col">
-            <textarea id="globalPrompt" name="globalPrompt" className='textarea' placeholder='Enter global prompt' rows="8" value={setting.globalPrompt} onChange={handleChange}></textarea>
+            <textarea id="globalPrompt" name="globalPrompt" className='textarea' placeholder='Enter global prompt' rows={8} value={setting.globalPrompt} onChange={handleChange}></textarea>
         </div>
         }
 
@@ -149,10 +149,10 @@ export default function Prompts({ setIsOpen, docPrompt, setDocPrompt, setting, s
         <li className='rounded-md border border-transparent bg-gray-100 px-4 py-2 text-sm font-medium text-graylue-900 hover:bg-blue-200 hover:text-blue-900 cursor-pointer mt-6' onClick={onCreateAction}>Create custom action</li>
         </ul>
         <div className='w-3/4'>
-            <label for="name" className="text-left text-gray-700">Name</label>
+            <label htmlFor="name" className="text-left text-gray-700">Name</label>
             <input id="name" name='name' className='input' value={setting.actionPrompts[actionIndex].name} onChange={handleAPChange}/>
-            <label for="prompt" className="text-left text-gray-700 mt-2">Action Prompt</label>
-            <textarea id="prompt" name='prompt' className='textarea' placeholder='Enter action prompt' rows="8" value={setting.actionPrompts[actionIndex].prompt} onChange={handleAPChange}/>
+            <label htmlFor="prompt" className="text-left text-gray-700 mt-2">Action Prompt</label>
+            <textarea id="prompt" name='prompt' className='textarea' placeholder='Enter action prompt' rows={8} value={setting.actionPrompts[actionIndex].prompt} onChange={handleAPChange}/>
         </div>
         </div>
         }

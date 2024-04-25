@@ -7,13 +7,13 @@ import {
   $isRangeSelection,
   $createParagraphNode,
   $getNodeByKey,
-$setSelection,
-$createRangeSelection
+  $setSelection,
+  $createRangeSelection
 } from "lexical";
 
 import { ActionIconMap } from "@/types/data";
 
-import { BsTypeBold, BsTypeItalic, BsTypeUnderline, BsTypeStrikethrough, BsTypeH1, BsTypeH2, BsListUl, BsListOl, BsCode, BsLink, BsQuote, BsTextParagraph} from 'react-icons/bs';
+import { BsTypeBold, BsTypeItalic, BsTypeUnderline, BsTypeStrikethrough, BsTypeH1, BsTypeH2, BsListUl, BsListOl, BsCode, BsLink, BsQuote, BsTextParagraph } from 'react-icons/bs';
 
 import { $isLinkNode, TOGGLE_LINK_COMMAND } from "@lexical/link";
 import { $wrapNodes, $isAtNodeEnd } from "@lexical/selection";
@@ -25,7 +25,7 @@ import {
   $isListNode,
   ListNode
 } from "@lexical/list";
-import { createPortal, render } from "react-dom";
+import { createPortal, } from "react-dom";
 import {
   $createHeadingNode,
   $createQuoteNode,
@@ -43,7 +43,8 @@ import {
   $convertToMarkdownString,
   TRANSFORMERS
 } from "@lexical/markdown";
-import { FiBook } from "react-icons/fi";
+import { FiBook, FiCopy } from "react-icons/fi";
+import { useToast } from "../ui/use-toast";
 
 const LowPriority = 1;
 
@@ -82,9 +83,8 @@ function positionEditorElement(editor, rect) {
   } else {
     editor.style.opacity = "1";
     editor.style.top = `${rect.top + rect.height + window.pageYOffset + 10}px`;
-    editor.style.left = `${
-      rect.left + window.pageXOffset - editor.offsetWidth / 2 + rect.width / 2
-    }px`;
+    editor.style.left = `${rect.left + window.pageXOffset - editor.offsetWidth / 2 + rect.width / 2
+      }px`;
   }
 }
 
@@ -95,6 +95,11 @@ function FloatingLinkEditor({ editor }) {
   const [linkUrl, setLinkUrl] = useState("");
   const [isEditMode, setEditMode] = useState(false);
   const [lastSelection, setLastSelection] = useState(null);
+
+  const copyContent = useCallback(() => {
+    const content = editor.getEditorState().read(() => $convertToMarkdownString(TRANSFORMERS));
+    navigator.clipboard.writeText(content);
+  }, [editor]);
 
   const updateLinkEditor = useCallback(() => {
     const selection = $getSelection();
@@ -383,43 +388,43 @@ function BlockOptionsDropdownList({
     <div className="dropdown" ref={dropDownRef}>
       <button className="item" onClick={formatParagraph}>
         {/* <span className="icon paragraph" /> */}
-        <span className="icon"><BsTextParagraph/></span>
+        <span className="icon"><BsTextParagraph /></span>
         <span className="text">Normal</span>
         {blockType === "paragraph" && <span className="active" />}
       </button>
       <button className="item" onClick={formatLargeHeading}>
         {/* <span className="icon large-heading" /> */}
-        <span className="icon"><BsTypeH1/></span>
+        <span className="icon"><BsTypeH1 /></span>
         <span className="text">Large Heading</span>
         {blockType === "h1" && <span className="active" />}
       </button>
       <button className="item" onClick={formatSmallHeading}>
         {/* <span className="icon small-heading" /> */}
-        <span className="icon"><BsTypeH2/></span>
+        <span className="icon"><BsTypeH2 /></span>
         <span className="text">Small Heading</span>
         {blockType === "h2" && <span className="active" />}
       </button>
       <button className="item" onClick={formatBulletList}>
         {/* <span className="icon bullet-list" /> */}
-        <span className="icon"><BsListUl/></span>
+        <span className="icon"><BsListUl /></span>
         <span className="text">Bullet List</span>
         {blockType === "ul" && <span className="active" />}
       </button>
       <button className="item" onClick={formatNumberedList}>
         {/* <span className="icon numbered-list" /> */}
-        <span className="icon"><BsListOl/></span>
+        <span className="icon"><BsListOl /></span>
         <span className="text">Numbered List</span>
         {blockType === "ol" && <span className="active" />}
       </button>
       <button className="item" onClick={formatQuote}>
         {/* <span className="icon quote" /> */}
-        <span className="icon"><BsQuote/></span>
+        <span className="icon"><BsQuote /></span>
         <span className="text">Quote</span>
         {blockType === "quote" && <span className="active" />}
       </button>
       <button className="item" onClick={formatCode}>
         {/* <span className="icon code" /> */}
-        <span className="icon"><BsCode/></span>
+        <span className="icon"><BsCode /></span>
         <span className="text">Code Block</span>
         {blockType === "code" && <span className="active" />}
       </button>
@@ -427,7 +432,10 @@ function BlockOptionsDropdownList({
   );
 }
 
-export default function ToolbarPlugin({setting, onCreateChat, setIsChatOpen, isMobile, setIsPromptsOpen}) {
+export default function ToolbarPlugin({ setting, onCreateChat, setIsChatOpen, isMobile, setIsPromptsOpen }) {
+
+  const { toast } = useToast()
+  
   const [editor] = useLexicalComposerContext();
   const toolbarRef = useRef(null);
   const [blockType, setBlockType] = useState("paragraph");
@@ -442,6 +450,14 @@ export default function ToolbarPlugin({setting, onCreateChat, setIsChatOpen, isM
   const [isUnderline, setIsUnderline] = useState(false);
   const [isStrikethrough, setIsStrikethrough] = useState(false);
   const [isCode, setIsCode] = useState(false);
+
+  const copyContent = useCallback(() => {
+    const content = editor.getEditorState().read(() => $convertToMarkdownString(TRANSFORMERS));
+    navigator.clipboard.writeText(content);
+    toast({
+      title: "Content copied to clipboard",
+    })
+  }, [editor]);
 
   const updateToolbar = useCallback(() => {
     const selection = $getSelection();
@@ -529,15 +545,15 @@ export default function ToolbarPlugin({setting, onCreateChat, setIsChatOpen, isM
   }, [editor, isLink]);
 
 
-  
+
   //https://stackoverflow.com/questions/75177766/is-there-a-way-to-make-an-async-request-inside-a-lexical-editor-update-in-react
   function update(task: string) {
-    if(isMobile){
+    if (isMobile) {
       setIsChatOpen(true)
     }
     console.log("TASK", task)
     let textContent = editor.getEditorState().read(() => $getSelection()?.getTextContent());
-    if(textContent === "" && task !== "chat"){
+    if (textContent === "" && task !== "chat") {
       textContent = editor.getEditorState().read(() => $convertToMarkdownString(TRANSFORMERS));
     }
     console.log("CONTEXT", textContent)
@@ -547,35 +563,35 @@ export default function ToolbarPlugin({setting, onCreateChat, setIsChatOpen, isM
     console.log("TOOLBAR", task)
     onCreateChat(task, textContent)
 
-  //  // REPLACE SELECTED TEXT
-  // editor.update(() => {
-  //   const selection = $getSelection()
-  //   if (!$isRangeSelection(selection)) return;
-  //   if(selection){
-  //     selection.insertText(txt);
-  //     console.log(selection.getNodes());
-  //     console.log("START", selection.anchor.key, selection.anchor.offset);
-  //     console.log("END", selection.focus.key, selection.focus.offset);
-  //     const rangeSelection = $createRangeSelection();
-  //     const startKey = selection.anchor;
-  //     const endKey = selection.focus;
-  //     rangeSelection.focus.set(
-  //       startKey.key,
-  //       startKey.offset - txt.length,
-  //       "text"
-  //     );
-  //     rangeSelection.anchor.set(endKey.key, endKey.offset, "text");
-  //     $setSelection(rangeSelection);
-  //   }
-  // });
+    //  // REPLACE SELECTED TEXT
+    // editor.update(() => {
+    //   const selection = $getSelection()
+    //   if (!$isRangeSelection(selection)) return;
+    //   if(selection){
+    //     selection.insertText(txt);
+    //     console.log(selection.getNodes());
+    //     console.log("START", selection.anchor.key, selection.anchor.offset);
+    //     console.log("END", selection.focus.key, selection.focus.offset);
+    //     const rangeSelection = $createRangeSelection();
+    //     const startKey = selection.anchor;
+    //     const endKey = selection.focus;
+    //     rangeSelection.focus.set(
+    //       startKey.key,
+    //       startKey.offset - txt.length,
+    //       "text"
+    //     );
+    //     rangeSelection.anchor.set(endKey.key, endKey.offset, "text");
+    //     $setSelection(rangeSelection);
+    //   }
+    // });
   }
 
   const renderIcon = (icon) => {
-    if(!ActionIconMap.hasOwnProperty(icon)){
+    if (!ActionIconMap.hasOwnProperty(icon)) {
       icon = 'custom'
     }
     const Icon = ActionIconMap[icon];
-    return (<Icon className="opacity-50 hover:opacity-60"/>);
+    return (<Icon className="opacity-50 hover:opacity-60" />);
   };
 
   const renderBs = (icon) => {
@@ -595,12 +611,23 @@ export default function ToolbarPlugin({setting, onCreateChat, setIsChatOpen, isM
   return (
     <div className="toolbar flex-wrap" ref={toolbarRef}>
       {supportedBlockTypes.has(blockType) && (
-        <><button onClick={(e) => setIsPromptsOpen(true)} className="toolbar-item spaced group">
-        
+        <>
 
-        <FiBook className="opacity-50 hover:opacity-60 mr-1"/><span className="opacity-50 hover:opacity-60"> Prompts</span>
-        <p className="toolbar-tip">Prompts</p>
-        </button>
+          <button onClick={(e) => setIsPromptsOpen(true)} className="toolbar-item spaced group">
+            <FiBook className="opacity-50 hover:opacity-60 mr-1" />
+            <span className="opacity-50 hover:opacity-60"> Prompts</span>
+            <p className="toolbar-tip">Prompts</p>
+          </button>
+
+          <button
+            onClick={copyContent}
+            className="toolbar-item spaced opacity-50 hover:opacity-60 flex gap-2 group"
+            aria-label="Copy Content"
+          >
+            <p className="toolbar-tip">Copy</p>
+            <FiCopy /> Copy
+          </button>
+
           <button
             className="toolbar-item block-controls"
             onClick={() =>
@@ -645,7 +672,7 @@ export default function ToolbarPlugin({setting, onCreateChat, setIsChatOpen, isM
             aria-label="Format Bold"
           >
             {/* <i className="format bold" /> */}
-            <i className="format"><BsTypeBold/></i>
+            <i className="format"><BsTypeBold /></i>
           </button>
           <button
             onClick={() => {
@@ -655,7 +682,7 @@ export default function ToolbarPlugin({setting, onCreateChat, setIsChatOpen, isM
             aria-label="Format Italics"
           >
             {/* <i className="format italic" /> */}
-            <i className="format"><BsTypeItalic/></i>
+            <i className="format"><BsTypeItalic /></i>
           </button>
           <button
             onClick={() => {
@@ -665,7 +692,7 @@ export default function ToolbarPlugin({setting, onCreateChat, setIsChatOpen, isM
             aria-label="Format Underline"
           >
             {/* <i className="format underline" /> */}
-            <i className="format"><BsTypeUnderline/></i>
+            <i className="format"><BsTypeUnderline /></i>
           </button>
           <button
             onClick={() => {
@@ -677,7 +704,7 @@ export default function ToolbarPlugin({setting, onCreateChat, setIsChatOpen, isM
             aria-label="Format Strikethrough"
           >
             {/* <i className="format strikethrough" /> */}
-            <i className="format"><BsTypeStrikethrough/></i>
+            <i className="format"><BsTypeStrikethrough /></i>
           </button>
           <button
             onClick={() => {
@@ -687,28 +714,28 @@ export default function ToolbarPlugin({setting, onCreateChat, setIsChatOpen, isM
             aria-label="Insert Code"
           >
             {/* <i className="format code" /> */}
-            <i className="format"><BsCode/></i>
+            <i className="format"><BsCode /></i>
           </button>
           <button
             onClick={insertLink}
             className={"toolbar-item spaced " + (isLink ? "active" : "")}
             aria-label="Insert Link"
           >
-            <i className="format"><BsLink/></i>
+            <i className="format"><BsLink /></i>
           </button>
           {isLink &&
             createPortal(<FloatingLinkEditor editor={editor} />, document.body)}
           <Divider />
-            {setting.actionPrompts.map((task)=>{
-                return (<button key={task.id}
-                onClick={async () => {update(task.id);}}
-                className="toolbar-item spaced group"
-                aria-label={task.name}
-              >
-                {renderIcon(task.id)}
-                <p className="toolbar-tip">{task.name}</p>
-              </button>)
-            })}
+          {setting.actionPrompts.map((task) => {
+            return (<button key={task.id}
+              onClick={async () => { update(task.id); }}
+              className="toolbar-item spaced group"
+              aria-label={task.name}
+            >
+              {renderIcon(task.id)}
+              <p className="toolbar-tip">{task.name}</p>
+            </button>)
+          })}
 
         </>
       )}
