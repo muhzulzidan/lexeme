@@ -233,7 +233,7 @@ Data Scientist, Growth Team
     <main
       className={`mx-auto max-w-6xl`}>
 
-      <ol className="">
+      {/* <ol className="">
         
         <li 
         className="flex  gap-3 items-center relative group rounded-md cursor-pointer break-all text-gray-900 hover:bg-gray-100"
@@ -267,7 +267,7 @@ Data Scientist, Growth Team
         </li>
        
         
-      </ol>
+      </ol> */}
 
       <div className="my-12 text-center">
         <h1 className='text-6xl font-semibold text-gray-900'>Open Source ChatGPT Text Editor</h1>
