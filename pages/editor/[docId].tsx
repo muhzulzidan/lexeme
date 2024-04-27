@@ -64,14 +64,25 @@ export function getSavedSettings(): Setting {
 }
 
 export async function getSavedSettingsPrisma(docId: string): Promise<Setting> {
-    const res = await fetch(`/api/getSettings?docId=${docId}`);
-    const settings = await res.json();
+    let prevSettings: Setting = DefaultSetting;
 
-    if (res.status !== 200) {
-        throw new Error(settings.error);
+    try {
+        const res = await fetch(`/api/getSettings?docId=${docId}`);
+        const settings = await res.json();
+
+        if (res.status === 200) {
+            prevSettings = settings as Setting;
+            if (prevSettings.actionPrompts === undefined) {
+                prevSettings.actionPrompts = DefaultActions;
+            }
+        } else {
+            throw new Error(settings.error);
+        }
+    } catch (error) {
+        console.error('Failed to fetch settings:', error);
     }
 
-    return settings;
+    return prevSettings;
 }
 
 // async function saveSettingsToDatabase(settings: Setting) {
@@ -204,19 +215,46 @@ export default function App() {
     const [setting, setSetting] = useState<Setting>(DefaultSetting);
     const [currentDoc, setCurrentDoc] = useState<Doc | null>(null);
 
+    const getAllDocsFromDatabase = async () => {
+        try {
+            const res = await fetch(`/api/getAllDocs`);
+            if (res.status !== 200) {
+                throw new Error('Failed to fetch documents');
+            }
+            const docs = await res.json();
+            localStorage.setItem('docs', JSON.stringify(docs));
+            return docs;
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
     useEffect(() => {
         if (currentDoc === null) {
             const docId = localStorage.getItem("selectedDocId")
-            if (docId === undefined || docId === null) {
-                onCreateDoc()
-                console.log("Creating new doc")
-            } else {
-                onSelectDoc(docId)
-                console.log("Loading doc", docId, currentDoc)
-                // setSerializedEditorState(doc.data)
+            // if (docId === undefined || docId === null) {
+            //     onCreateDoc()
+            //     console.log("Creating new doc")
+            // } else {
+            //     onSelectDoc(docId)
+            //     console.log("Loading doc", docId, currentDoc)
+            //     // setSerializedEditorState(doc.data)
 
-                console.log("setting_useeffect", setting);
-            }
+            //     console.log("setting_useeffect", setting);
+            // }
+
+            onSelectDoc(docId)
+            console.log("Loading doc", docId, currentDoc)
+            // setSerializedEditorState(doc.data)
+
+            console.log("setting_useeffect", setting);
+
+            getAllDocsFromDatabase().then(docs => {
+                if (docs) {
+                    setDocs(docs);
+                    saveDocsToDatabase(docs);
+                }
+            });
 
             const _docs = localStorage.getItem("docs")
             console.log("DOCS editor", JSON.parse(_docs))
@@ -234,7 +272,7 @@ export default function App() {
     async function saveDocsToDatabase(docs: DocIndex[]) {
         await axios.post('/api/saveDocs', { docs });
     }
-    const onChatUpdate = (id: string, role: Role, response: string) => {
+    const onChatUpdate = async (id: string, role: Role, response: string) => {
         let _history = []
         for (let i = 0; i < history.length; i++) {
             const chat = history[i];
@@ -251,6 +289,22 @@ export default function App() {
         setHistory(_history);
         saveDoc(editorState, _history)
         console.log("Saving history..", _history)
+
+        try {
+            const doc: Doc = { ...currentDoc, history: _history, updatedAt: +new Date }
+            const res = await fetch('/api/saveDoc', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(doc)
+            });
+            if (res.status !== 200) {
+                throw new Error('Failed to save document');
+            }
+        } catch (error) {
+            console.error(error);
+        }
     };
     async function onCreateChat(task, content) {
         // const setting = getSettings();
@@ -283,35 +337,62 @@ export default function App() {
     };
 
 
-    const onChange = (editorState: EditorState) => {
+    const onChange = async (editorState: EditorState) => {
         if (currentDoc) {
             const _editorState = JSON.stringify(editorState.toJSON())
             setEditorState(_editorState)
             saveDoc(_editorState, history)
-            console.log("Saving changes...", history)
+            console.log("Saving changes... onChange", history)
+
+            try {
+                const doc: Doc = { ...currentDoc, data: _editorState, history: history, updatedAt: +new Date }
+                const res = await fetch('/api/saveDoc', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ ...doc, id: doc.id.replace('doc-', '') }) // remove "doc-" prefix
+                });
+                if (res.status !== 200) {
+                    throw new Error('Failed to save document');
+                }
+            } catch (error) {
+                console.error(error);
+            }
         }
     }
 
-    const onCreateDoc = () => {
+    const onCreateDoc = async () => {
         const doc: Doc = { id: nanoid(), title: "Untitled", prompt: "", data: defaultData, history: [], createdAt: +new Date, updatedAt: +new Date }
-        const _docs: DocIndex[] = [{ id: "doc-" + doc.id, title: doc.title } as DocIndex, ...docs]
+        const _docs: DocIndex[] = [{ id: doc.id, title: doc.title } as DocIndex, ...docs]
         setDocs(_docs);
-        saveDocsToDatabase(_docs);
+        // saveDocsToDatabase(_docs);
         localStorage.setItem("docs", JSON.stringify(_docs))
-        localStorage.setItem("doc-" + doc.id, JSON.stringify(doc))
-        localStorage.setItem("selectedDocId", "doc-" + doc.id)
+        localStorage.setItem(doc.id, JSON.stringify(doc))
+        localStorage.setItem("selectedDocId", doc.id)
         setCurrentDoc(doc)
         setEditorState(doc.data)
         setHistory(doc.history)
-        console.log("created", doc.id)
+        console.log("created onCreateDoc", doc.id)
+
+        try {
+            const res = await fetch('/api/saveDoc', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ ...doc, id: doc.id.replace('doc-', '') }) // remove "doc-" prefix
+            });
+            if (res.status !== 200) {
+                throw new Error('Failed to save document');
+            }
+        } catch (error) {
+            console.error(error);
+        }
     }
 
 
     const onSelectDoc = async (docId: string) => {
-        const prevSettings: Setting = getSavedSettings();
-        // const prismaSettings = getSavedSettingsPrisma(docId);
-        // console.log("prismaSettings", prismaSettings)
-
         try {
             const prismaSettings = await getSavedSettingsPrisma(docId);
             console.log("prismaSettings", prismaSettings);
@@ -320,25 +401,31 @@ export default function App() {
             console.error('Failed to fetch settings:', error);
         }
 
-        // setSetting(prevSettings)
         console.log("selectedDoc", docId)
-        const doc = JSON.parse(localStorage.getItem(docId)) as Doc;
-        if (doc === null) {
-            console.error('Failed to load document:', docId);
-        } else {
-            setCurrentDoc(doc);
-            setEditorState(doc.data);
-            setHistory(doc.history);
-            setDocPrompt(doc.prompt);
-            localStorage.setItem("selectedDocId", "doc-" + doc.id);
+
+        try {
+            const res = await fetch(`/api/getDoc?docId=${docId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            if (res.status === 200) {
+                const doc = await res.json() as Doc;
+                doc.id = doc.id; // add "doc-" prefix
+                setCurrentDoc(doc);
+                setEditorState(doc.data);
+                setHistory(doc.history);
+                setDocPrompt(doc.prompt);
+                localStorage.setItem("selectedDocId", doc.id);
+            } else {
+                throw new Error('Failed to fetch document');
+            }
+        } catch (error) {
+            console.error(error);
         }
-        // setCurrentDoc(doc)
-        // setEditorState(doc.data)
-        // setHistory(doc.history)
-        // setDocPrompt(doc.prompt)
-        // localStorage.setItem("selectedDocId", "doc-" + doc.id)
+
         setIsNavOpen(false)
-        // Navigate to the new page
         router.push(`/editor/${docId}`);
     }
 
@@ -366,34 +453,87 @@ export default function App() {
         }
     }
 
-    const saveDoc = (_editorState, _history) => {
+    // const saveDoc = (_editorState, _history) => {
+    //     const doc: Doc = { ...currentDoc, data: _editorState, history: _history, updatedAt: +new Date }
+    //     localStorage.setItem(currentDoc.id, JSON.stringify(doc))
+    //     console.log("saved", currentDoc.id)
+    // }
+
+    const saveDoc = async (_editorState, _history) => {
         const doc: Doc = { ...currentDoc, data: _editorState, history: _history, updatedAt: +new Date }
-        localStorage.setItem("doc-" + currentDoc.id, JSON.stringify(doc))
-        console.log("saved", "doc-" + currentDoc.id)
+        localStorage.setItem(currentDoc.id, JSON.stringify(doc))
+        console.log("saved saveDoc currentDoc", currentDoc.id)
+        console.log("saved saveDoc", JSON.stringify(doc))
+        console.log("saved saveDoc _editorState", _editorState)
+
+        try {
+            const res = await fetch('/api/saveDoc', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ ...doc, id: doc.id.replace('doc-', '') }) // remove "doc-" prefix
+            });
+            if (res.status !== 200) {
+                throw new Error('Failed to save document');
+            }
+        } catch (error) {
+            console.error(error);
+        }
     }
 
 
-    const onSaveDocPrompt = (prompt) => {
+    const onSaveDocPrompt = async (prompt) => {
         const doc: Doc = { ...currentDoc, prompt }
         setCurrentDoc(doc)
-        localStorage.setItem("doc-" + currentDoc.id, JSON.stringify(doc))
-        console.log("saved", "doc-" + currentDoc.id)
+        localStorage.setItem(currentDoc.id, JSON.stringify(doc))
+        console.log("saved onSaveDocPrompt", currentDoc.id)
+
+        try {
+            const res = await fetch('/api/saveDoc', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ ...doc, id: doc.id.replace('doc-', '') }) // remove "doc-" prefix
+            });
+            if (res.status !== 200) {
+                throw new Error('Failed to save document');
+            }
+        } catch (error) {
+            console.error(error);
+        }
     }
 
 
-    const onTitleChange = (title) => {
+    const onTitleChange = async (title) => {
         console.log("TITLE", title)
         const doc: Doc = { ...currentDoc, title }
-        localStorage.setItem("doc-" + currentDoc.id, JSON.stringify(doc))
-        console.log("saved", "doc-" + currentDoc.id)
+        localStorage.setItem(currentDoc.id, JSON.stringify(doc))
+        console.log("saved", currentDoc.id)
         const _docs = docs.map(obj => {
-            if (obj.id == "doc-" + currentDoc.id) {
+            if (obj.id == currentDoc.id) {
                 return { ...obj, title }
             }
             return obj
         })
         setDocs(_docs)
         localStorage.setItem("docs", JSON.stringify(_docs))
+
+        try {
+            const res = await fetch('/api/saveDoc', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ ...doc, id: doc.id.replace('doc-', '') }) // remove "doc-" prefix
+            });
+            if (res.status !== 200) {
+                throw new Error('Failed to save document');
+            }
+        } catch (error) {
+            console.error(error);
+        }
     }
 
     // Lifted from https://stackoverflow.com/questions/19721439/download-json-object-as-a-file-from-browser
@@ -476,7 +616,7 @@ export default function App() {
                         setIsOpen={setIsSettingsOpen}
                         setting={setting}
                         setSetting={setSetting}
-                        docId={currentDoc ? "doc-" + currentDoc.id : ""}
+                        docId={currentDoc ? currentDoc.id : ""}
                     />
                 </Modal>
                 <div className={isNavOpen ? "w-full z-1 p-4 border-r border-gray-200" : "hidden lg:p-4 lg:flex lg:flex-col lg:w-1/5"}>

@@ -52,9 +52,14 @@ export default function Settings({ setIsOpen, setting, setSetting, docId }) {
     }
 
     const onSave = (e) => {
-        localStorage.setItem("settings", JSON.stringify(setting))
-        console.log("Saved Settings", JSON.stringify(setting))
-        saveSettingsToDatabase(setting, docId);
+        const currentDateTime = new Date().toISOString();
+        const updatedSetting = { ...setting, createdAt: currentDateTime, updatedAt: currentDateTime };
+
+        localStorage.setItem("settings", JSON.stringify(updatedSetting))
+        console.log("Saved Settings", JSON.stringify(updatedSetting))
+        saveSettingsToDatabase(updatedSetting, docId);
+        console.log(updatedSetting, "save settings");
+        console.log(docId, "docId settings");
         setIsOpen(false)
     };
 
