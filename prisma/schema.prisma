@@ -17,9 +17,12 @@ datasource db {
 model Doc {
   id         String   @id
   title      String
+  prompt     String?
+  data       Json?
+  history    Json?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-  settings  Settings?
+  settings   Settings?
 }
 
 model Settings {

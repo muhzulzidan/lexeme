@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Doc" ALTER COLUMN "data" DROP NOT NULL,
+ALTER COLUMN "prompt" DROP NOT NULL;
