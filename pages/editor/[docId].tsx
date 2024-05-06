@@ -233,16 +233,35 @@ export default function App() {
     
     useEffect(() => {
         if (docId) {
-            axios.get(`/api/docs/${docId}`).then(response => {
-                if (response.data) {
-                    // Document exists, load it into the editor
-                    setDocs(response.data)
-                } else async () =>{
+            console.log("docId", docId);
+            axios.get(`/api/docs/${docId}`).then(async response => {
+                // Document exists, load it into the editor
+                setDocs([response.data])
+                // Fetch the newly created document
+                const res = await fetch(`/api/getDoc?docId=${docId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (res.status === 200) {
+                    const doc = await res.json() as Doc;
+                    doc.id = doc.id; // add "doc-" prefix
+                    setCurrentDoc(doc);
+                    setEditorState(doc.data);
+                    setHistory(doc.history);
+                    setDocPrompt(doc.prompt);
+                    localStorage.setItem("selectedDocId", doc.id);
+                } else {
+                    throw new Error('Failed to fetch document');
+                }
+                console.log("docId", docId);
+            }).catch(error => {
+                if (error.response && error.response.status === 404) {
+                    console.log("docId", docId);
                     // Document doesn't exist, create a new one
-                    // const newDoc = { id: docId, data: {} }
-                    // If there are no documents, create a new one
                     const newDoc = {
-                        id: docId,
+                        id: Array.isArray(docId) ? docId[0] : docId,
                         title: "Untitled",
                         prompt: "",
                         data: defaultData, // replace with your default data
@@ -250,41 +269,82 @@ export default function App() {
                         createdAt: new Date(),
                         updatedAt: new Date()
                     };
-                    await prisma.doc.create({ data: newDoc });
-                    docs = [newDoc];
-                    setDocs([newDoc])
-                    saveDocsToDatabase([newDoc])
+                    let docs = [newDoc];
+                    setDocs(docs)
+
+                    // Save the new document to the database
+                    fetch('/api/createDoc', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(newDoc),
+                    })
+                        .then(response => response.json())
+                        .then(async (data) => {
+                            console.log(data);
+
+                            // Fetch the newly created document
+                            const res = await fetch(`/api/getDoc?docId=${data.id}`, {
+                                method: 'GET',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                }
+                            });
+                            if (res.status === 200) {
+                                const doc = await res.json() as Doc;
+                                doc.id = doc.id; // add "doc-" prefix
+                                setCurrentDoc(doc);
+                                setEditorState(doc.data);
+                                setHistory(doc.history);
+                                setDocPrompt(doc.prompt);
+                                localStorage.setItem("selectedDocId", doc.id);
+                            } else {
+                                throw new Error('Failed to fetch document');
+                            }
+                        })
+                        .catch((error) => {
+                            console.error('Error:', error);
+                        });
                 }
             })
         }
+        getAllDocsFromDatabase().then(docs => {
+            if (docs) {
+                setDocs(docs);
+            }
+        });
     }, [docId])
 
-    useEffect(() => {
-        if (currentDoc === null) {
-            const docId = localStorage.getItem("selectedDocId")
-            onSelectDoc(docId)
-            console.log("Loading doc", docId, currentDoc)
-            console.log("setting_useeffect", setting);
-            getAllDocsFromDatabase().then(docs => {
-                if (docs) {
-                    setDocs(docs);
-                    saveDocsToDatabase(docs);
-                }
-            });
-            const _docs = localStorage.getItem("docs")
-            console.log("DOCS editor", JSON.parse(_docs))
+    // useEffect(() => {
+    //     if (currentDoc === null) {
+    //         const docId = localStorage.getItem("selectedDocId")
+    //         onSelectDoc(docId)
+    //         console.log("Loading doc", docId, currentDoc)
+    //         console.log("setting_useeffect", setting);
+    //         getAllDocsFromDatabase().then(docs => {
+    //             if (docs) {
+    //                 setDocs(docs);
+    //                 saveDocsToDatabase(docs);
+    //             }
+    //         });
+    //         const _docs = localStorage.getItem("docs")
+    //         console.log("DOCS editor", JSON.parse(_docs))
 
-            if (_docs) {
-                setDocs(JSON.parse(_docs))
-                // Save the documents to the database
-                saveDocsToDatabase(JSON.parse(_docs));
-            }
-        }
+    //         if (_docs) {
+    //             setDocs(JSON.parse(_docs))
+    //             // Save the documents to the database
+    //             saveDocsToDatabase(JSON.parse(_docs));
+    //         }
+    //     }
 
-    }, [])
+    // }, [])
 
     async function saveDocsToDatabase(docs: DocIndex[]) {
         await axios.post('/api/saveDocs', { docs });
+    }
+    async function saveDocToDatabase(docs: DocIndex[]) {
+        await axios.post('/api/saveDoc', { docs });
     }
     const onChatUpdate = async (id: string, role: Role, response: string) => {
         let _history = []
