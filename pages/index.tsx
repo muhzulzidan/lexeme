@@ -233,42 +233,7 @@ Data Scientist, Growth Team
     <main
       className={`mx-auto max-w-6xl`}>
 
-      {/* <ol className="">
-        
-        <li 
-        className="flex  gap-3 items-center relative group rounded-md cursor-pointer break-all text-gray-900 hover:bg-gray-100"
-        >
-          <button 
-          className="w-full h-full px-4 py-4 flex justify-start " 
-          onClick={() => alert("anjay 3")}
-          >
-            anjay 1
-          </button>
-          <button
-            onClick={() => alert("button 3")}
-            className="h-full px-4 py-4 ml-auto rounded-lg hover:bg-indigo-400"
-            >
-            <Trash3Fill className="w-4 h-auto" />
-          </button>
-        </li>
-        
-        <li className="flex gap-3 items-center relative group rounded-md cursor-pointer break-all text-gray-900 hover:bg-gray-100 ">
-          <button 
-          className=" p-3 " 
-          onClick={() => alert("anjay 2")}
-          >
-            anjay 3
-          </button>
-          <button
-            onClick={() => alert("button 2")}
-            className="h-full px-4 py-4 ml-auto rounded-lg hover:bg-indigo-400">
-            <Trash3Fill className="w-4 h-auto" />
-          </button>
-        </li>
-       
-        
-      </ol> */}
-
+     
       <div className="my-12 text-center">
         <h1 className='text-6xl font-semibold text-gray-900'>Open Source ChatGPT Text Editor</h1>
         {/* ChatGPT workbench for power users */}
@@ -281,16 +246,7 @@ Data Scientist, Growth Team
         <Link className="inline-block text-2xl justify-center mt-4 py-4 px-6 transition-colors border border-gray-300 hover:border-gray-200 hover:bg-gray-200 bg-white rounded-lg" href="https://github.com/pagebrain/lexeme" target="_blank">Github</Link>
 
       </div>
-      {/* <div className="my-24 text-center">
-      Start separate chat threads
-      </div> */}
-      {/* 
-      <div className="relative mx-auto max-w-7xl mt-8 mb-16 px-8">
-        <div className="text-center">
-            <h2 className='text-4xl font-semibold text-gray-900 mb-4'>Select and Chat</h2>
-            <p className="text-2xl text-gray-600 mb-8"></p>
-        </div>
-      </div> */}
+     
 
       <div className="relative mx-auto max-w-7xl mt-8 mb-16 px-8">
         <div className="text-center">
