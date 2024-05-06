@@ -197,6 +197,8 @@ function Editor({ editorState, onCreateChat, onChange, dtitle, history, onChatUp
 export default function App() {
     const router = useRouter();
 
+    const { docId } = router.query
+
     const [history, setHistory] = useState<ChatHistory[]>([]);
     const defaultData: string = '{"root":{"children":[{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1}],"direction":"ltr","format":"","indent":0,"type":"root","version":1}}'
     const [editorState, setEditorState] = useState<string>(defaultData)
@@ -228,34 +230,47 @@ export default function App() {
             console.error(error);
         }
     }
+    
+    useEffect(() => {
+        if (docId) {
+            axios.get(`/api/docs/${docId}`).then(response => {
+                if (response.data) {
+                    // Document exists, load it into the editor
+                    setDocs(response.data)
+                } else async () =>{
+                    // Document doesn't exist, create a new one
+                    // const newDoc = { id: docId, data: {} }
+                    // If there are no documents, create a new one
+                    const newDoc = {
+                        id: docId,
+                        title: "Untitled",
+                        prompt: "",
+                        data: defaultData, // replace with your default data
+                        history: [],
+                        createdAt: new Date(),
+                        updatedAt: new Date()
+                    };
+                    await prisma.doc.create({ data: newDoc });
+                    docs = [newDoc];
+                    setDocs([newDoc])
+                    saveDocsToDatabase([newDoc])
+                }
+            })
+        }
+    }, [docId])
 
     useEffect(() => {
         if (currentDoc === null) {
             const docId = localStorage.getItem("selectedDocId")
-            // if (docId === undefined || docId === null) {
-            //     onCreateDoc()
-            //     console.log("Creating new doc")
-            // } else {
-            //     onSelectDoc(docId)
-            //     console.log("Loading doc", docId, currentDoc)
-            //     // setSerializedEditorState(doc.data)
-
-            //     console.log("setting_useeffect", setting);
-            // }
-
             onSelectDoc(docId)
             console.log("Loading doc", docId, currentDoc)
-            // setSerializedEditorState(doc.data)
-
             console.log("setting_useeffect", setting);
-
             getAllDocsFromDatabase().then(docs => {
                 if (docs) {
                     setDocs(docs);
                     saveDocsToDatabase(docs);
                 }
             });
-
             const _docs = localStorage.getItem("docs")
             console.log("DOCS editor", JSON.parse(_docs))
 
@@ -264,7 +279,6 @@ export default function App() {
                 // Save the documents to the database
                 saveDocsToDatabase(JSON.parse(_docs));
             }
-
         }
 
     }, [])
@@ -453,12 +467,6 @@ export default function App() {
         }
     }
 
-    // const saveDoc = (_editorState, _history) => {
-    //     const doc: Doc = { ...currentDoc, data: _editorState, history: _history, updatedAt: +new Date }
-    //     localStorage.setItem(currentDoc.id, JSON.stringify(doc))
-    //     console.log("saved", currentDoc.id)
-    // }
-
     const saveDoc = async (_editorState, _history) => {
         const doc: Doc = { ...currentDoc, data: _editorState, history: _history, updatedAt: +new Date }
         localStorage.setItem(currentDoc.id, JSON.stringify(doc))
@@ -482,7 +490,6 @@ export default function App() {
         }
     }
 
-
     const onSaveDocPrompt = async (prompt) => {
         const doc: Doc = { ...currentDoc, prompt }
         setCurrentDoc(doc)
@@ -504,7 +511,6 @@ export default function App() {
             console.error(error);
         }
     }
-
 
     const onTitleChange = async (title) => {
         console.log("TITLE", title)
@@ -536,7 +542,6 @@ export default function App() {
         }
     }
 
-    // Lifted from https://stackoverflow.com/questions/19721439/download-json-object-as-a-file-from-browser
     function downloadObjectAsJson(exportObj, exportName) {
         var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj));
         var downloadAnchorNode = document.createElement('a');
@@ -651,20 +656,6 @@ export default function App() {
                     </ol>
 
                     <div className="flex-col flex-1 border-t border-white/2 pt-2 mt-2">
-                        {/* <a onClick={onExport} className="flex p-3 gap-3 items-center relative group rounded-md cursor-pointer break-all text-gray-900 hover:bg-gray-100 ">
-                            <FiDownload /> Export
-                        </a>
-                        <input id="import-file" className="sr-only" tabIndex={-1} type="file" accept=".json" onChange={onImportChange} />
-                        <a onClick={() => {
-                            const importFile = document.querySelector(
-                                '#import-file',
-                            ) as HTMLInputElement;
-                            if (importFile) {
-                                importFile.click();
-                            }
-                        }} className="flex p-3 gap-3 items-center relative group rounded-md cursor-pointer break-all text-gray-900 hover:bg-gray-100 ">
-                            <FiUpload /> Import
-                        </a> */}
                         <a onClick={(e) => setIsSettingsOpen(true)} className="flex p-3 gap-3 items-center relative group rounded-md cursor-pointer break-all text-gray-900 hover:bg-gray-100 ">
                             <FiSettings /> Settings
                         </a>
