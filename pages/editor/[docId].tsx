@@ -294,11 +294,14 @@ export default function App() {
                             if (res.status === 200) {
                                 const doc = await res.json() as Doc;
                                 doc.id = doc.id; // add "doc-" prefix
+                                onSelectDoc(doc.id)
                                 setCurrentDoc(doc);
                                 setEditorState(doc.data);
                                 setHistory(doc.history);
                                 setDocPrompt(doc.prompt);
                                 localStorage.setItem("selectedDocId", doc.id);
+                                const _docs = localStorage.getItem("docs")
+                                console.log("DOCS editor", JSON.parse(_docs))
                             } else {
                                 throw new Error('Failed to fetch document');
                             }

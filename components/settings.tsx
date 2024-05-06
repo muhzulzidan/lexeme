@@ -34,6 +34,7 @@ export default function Settings({ setIsOpen, setting, setSetting, docId }) {
             //   });
             // } catch (e) {}
             // setModelError(error);
+            console.log("Invalid API Key", response)
             setError("Invalid API Key")
             setModels(null)
             return;
