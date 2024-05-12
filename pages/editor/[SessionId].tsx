@@ -44,6 +44,7 @@ import { useRouter } from 'next/router';
 import Layout from "@/components/layout";
 import { toast } from "@/components/ui/use-toast";
 import { Toast } from "@/components/ui/toast";
+import { Session } from "inspector";
 
 
 export function getSavedSettings(): Setting {
@@ -197,7 +198,7 @@ function Editor({ editorState, onCreateChat, onChange, dtitle, history, onChatUp
 export default function App() {
     const router = useRouter();
 
-    const { docId } = router.query
+    const { SessionId } = router.query
 
     const [history, setHistory] = useState<ChatHistory[]>([]);
     const defaultData: string = '{"root":{"children":[{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1}],"direction":"ltr","format":"","indent":0,"type":"root","version":1}}'
@@ -232,36 +233,60 @@ export default function App() {
     }
     
     useEffect(() => {
-        if (docId) {
-            console.log("docId", docId);
-            axios.get(`/api/docs/${docId}`).then(async response => {
-                // Document exists, load it into the editor
-                setDocs([response.data])
-                // Fetch the newly created document
-                const res = await fetch(`/api/getDoc?docId=${docId}`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
+        console.log("useEffect triggered with SessionId: ", SessionId);
+
+        if (SessionId) {
+            console.log("SessionId", SessionId);
+            // Fetch all documents within the SessionId
+            axios.get(`/api/sessions/${SessionId}`).then(async response => {
+                // Check if the docId exists in the documents
+                const docs = response.data;
+                let docId = localStorage.getItem("selectedDocId");
+
+                // If docId is not set in localStorage, set it to the id from the found documents
+                if (!docId && docs.length > 0) {
+                    docId = docs[0].id;
+                    localStorage.setItem("selectedDocId", docId);
+
+                    // Fetch the document with docId from the database
+                    const res = await fetch(`/api/getDoc?docId=${docId}`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    if (res.status === 200) {
+                        const doc = await res.json() as Doc;
+
+                        // Update the title of the document
+                        doc.title = "New Title"; // replace with your desired title
+
+                        // Save the updated document back to the database
+                        fetch('/api/updateDoc', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(doc),
+                        })
+                            .then(response => response.json())
+                            .then(data => {
+                                console.log(data);
+                            })
+                            .catch((error) => {
+                                console.error('Error:', error);
+                            });
+                    } else {
+                        throw new Error('Failed to fetch document');
                     }
-                });
-                if (res.status === 200) {
-                    const doc = await res.json() as Doc;
-                    doc.id = doc.id; // add "doc-" prefix
-                    setCurrentDoc(doc);
-                    setEditorState(doc.data);
-                    setHistory(doc.history);
-                    setDocPrompt(doc.prompt);
-                    localStorage.setItem("selectedDocId", doc.id);
-                } else {
-                    throw new Error('Failed to fetch document');
                 }
-                console.log("docId", docId);
-            }).catch(error => {
-                if (error.response && error.response.status === 404) {
-                    console.log("docId", docId);
-                    // Document doesn't exist, create a new one
+                let docIdExists = docs.some(doc => doc.id === docId);
+                console.log("docIdExists", docIdExists);
+                if (!docIdExists) {
+                    // docId doesn't exist, create a new document
                     const newDoc = {
-                        id: Array.isArray(docId) ? docId[0] : docId,
+                        id: docId,
+                        sessionId: SessionId,
                         title: "Untitled",
                         prompt: "",
                         data: defaultData, // replace with your default data
@@ -269,9 +294,6 @@ export default function App() {
                         createdAt: new Date(),
                         updatedAt: new Date()
                     };
-                    let docs = [newDoc];
-                    setDocs(docs)
-
                     // Save the new document to the database
                     fetch('/api/createDoc', {
                         method: 'POST',
@@ -283,7 +305,6 @@ export default function App() {
                         .then(response => response.json())
                         .then(async (data) => {
                             console.log(data);
-
                             // Fetch the newly created document
                             const res = await fetch(`/api/getDoc?docId=${data.id}`, {
                                 method: 'GET',
@@ -294,14 +315,14 @@ export default function App() {
                             if (res.status === 200) {
                                 const doc = await res.json() as Doc;
                                 doc.id = doc.id; // add "doc-" prefix
-                                onSelectDoc(doc.id)
+                                const _editorState = JSON.stringify(doc.data)
+                                setEditorState(_editorState)
+                                saveDoc(_editorState, history)
                                 setCurrentDoc(doc);
-                                setEditorState(doc.data);
+                                // setEditorState(doc.data);
                                 setHistory(doc.history);
                                 setDocPrompt(doc.prompt);
                                 localStorage.setItem("selectedDocId", doc.id);
-                                const _docs = localStorage.getItem("docs")
-                                console.log("DOCS editor", JSON.parse(_docs))
                             } else {
                                 throw new Error('Failed to fetch document');
                             }
@@ -309,15 +330,48 @@ export default function App() {
                         .catch((error) => {
                             console.error('Error:', error);
                         });
+                } else {
+                    // docId exists, select the document
+                    onSelectDoc(docId);
+                    console.log("Loading doc", docId, currentDoc);
+                    console.log("setting_useeffect", setting);
+                    getAllDocsFromDatabase().then(docs => {
+                        if (docs) {
+                            setDocs(docs);
+                            // saveDocsToDatabase(docs);
+                        }
+                    });
+                    const _docs = localStorage.getItem("docs");
+                    console.log("DOCS editor", JSON.parse(_docs));
+                    if (_docs) {
+                        setDocs(JSON.parse(_docs));
+                        // Save the documents to the database
+                        // saveDocsToDatabase(JSON.parse(_docs));
+                    }
+                }
+            }).catch(async error => {
+                console.log('Error:', error);
+                // If the session doesn't exist, create a new one
+                const newSession = {
+                    id: SessionId,
+                    // Add any other session properties you need
+                };
+                try {
+                    const response = await fetch('/api/createSession', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(newSession),
+                    });
+                    const data = await response.json();
+                    console.log('New session created:', data);
+                } catch (error) {
+                    console.error('Failed to create new session:', error);
                 }
             })
         }
-        getAllDocsFromDatabase().then(docs => {
-            if (docs) {
-                setDocs(docs);
-            }
-        });
-    }, [docId])
+    }, [SessionId])
 
     // useEffect(() => {
     //     if (currentDoc === null) {
@@ -343,9 +397,9 @@ export default function App() {
 
     // }, [])
 
-    async function saveDocsToDatabase(docs: DocIndex[]) {
-        await axios.post('/api/saveDocs', { docs });
-    }
+    // async function saveDocsToDatabase(docs: DocIndex[]) {
+    //     await axios.post('/api/saveDocs', { docs });
+    // }
     async function saveDocToDatabase(docs: DocIndex[]) {
         await axios.post('/api/saveDoc', { docs });
     }
@@ -440,7 +494,8 @@ export default function App() {
     }
 
     const onCreateDoc = async () => {
-        const doc: Doc = { id: nanoid(), title: "Untitled", prompt: "", data: defaultData, history: [], createdAt: +new Date, updatedAt: +new Date }
+        console.log("onCreateDoc", SessionId)
+        const doc: Doc = { id: nanoid(), title: "Untitled", prompt: "", data: defaultData, history: [], createdAt: +new Date, updatedAt: +new Date}
         const _docs: DocIndex[] = [{ id: doc.id, title: doc.title } as DocIndex, ...docs]
         setDocs(_docs);
         // saveDocsToDatabase(_docs);
@@ -458,7 +513,7 @@ export default function App() {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ ...doc, id: doc.id.replace('doc-', '') }) // remove "doc-" prefix
+                body: JSON.stringify({ ...doc, sessionId: SessionId, id: doc.id.replace('doc-', '') }) // remove "doc-" prefix
             });
             if (res.status !== 200) {
                 throw new Error('Failed to save document');
@@ -489,9 +544,14 @@ export default function App() {
             });
             if (res.status === 200) {
                 const doc = await res.json() as Doc;
+
                 doc.id = doc.id; // add "doc-" prefix
+                const _editorState = doc.data
+                // const _editorState = JSON.stringify(doc.data)
+                console.log("_editorState", _editorState);
+                console.log("selectedDoc doc", doc);
                 setCurrentDoc(doc);
-                setEditorState(doc.data);
+                setEditorState(_editorState);
                 setHistory(doc.history);
                 setDocPrompt(doc.prompt);
                 localStorage.setItem("selectedDocId", doc.id);
@@ -503,7 +563,7 @@ export default function App() {
         }
 
         setIsNavOpen(false)
-        router.push(`/editor/${docId}`);
+        // router.push(`/editor/${docId}`);
     }
 
     const onDeleteDoc = async (docId: string) => {
@@ -524,7 +584,7 @@ export default function App() {
             toast({
                 title: "Document deleted successfully",
             })
-            router.push(`/editor`);
+            // router.push(`/editor`);
         } catch (error) {
             console.error(error);
         }
@@ -560,12 +620,15 @@ export default function App() {
         console.log("saved onSaveDocPrompt", currentDoc.id)
 
         try {
+            const requestBody = JSON.stringify({ ...doc, id: doc.id.replace('doc-', ''), SessionId: SessionId }); // remove "doc-" prefix
+            console.log("Request body: ", requestBody); // Log the request body
+
             const res = await fetch('/api/saveDoc', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ ...doc, id: doc.id.replace('doc-', '') }) // remove "doc-" prefix
+                body: requestBody
             });
             if (res.status !== 200) {
                 throw new Error('Failed to save document');
